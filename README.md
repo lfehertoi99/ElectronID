@@ -1,2 +1,2 @@
 # ElectronID
-Summer project - classification for CMS data
+Summer project - classification methods for CMS data
