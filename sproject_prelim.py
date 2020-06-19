@@ -83,14 +83,15 @@ var_gun2 = np.var(invm_gun2)
 
 fisher_discriminant = (mean_gun1 - mean_gun2)**2 / (var_gun1 + var_gun2)
 
-#%% use make_blobs to generate data
+#%% THIS SECTION IS TESTING LDA ON A GENERATED DATASET 
+#use make_blobs to generate data
 
 X, y = make_blobs(n_samples=100)
 # X stores the data as a column vector and y stores class labels for each sample as an integer
 # returns 2 columns, each col with vals for a class
 # y values will all be 1 or 2 as n_features = 2 means there are 2 classes
 
-#%% plot blobs
+### plot blobs
 
 def plot_blobs(X,y):
     df = pd.DataFrame(dict(x=X[:,0],y=X[:,1], label=y)) #can use dict as have only 2 classes
@@ -103,5 +104,30 @@ def plot_blobs(X,y):
         group.plot(ax=ax, kind='scatter', x='x', y='y', label=key, color=colours[key], s=10) #x and y are strings since they are the names of df columns
     
     plt.show()
+
+#%% make LDA func and test 
+    
+lineardisc = LDA(n_components = 2) #object of class LDA for 2 classes
+
+LDA_fit = lineardisc.fit(X, y) # for 2 classes
+#takes first arg as training data and second arg as targets 
+
+#grouping pt and eta values
+pt_vals = np.concatenate((pt_gauss1, pt_gauss2))
+eta_vals = np.concatenate((eta_gauss1, eta_gauss2))
+#create array of all mixed values for LDA to sort 
+X_pt_eta = np.column_stack((pt_vals, eta_vals))
+
+g1_labels = np.zeros(1000)
+g2_labels = np.ones(1000)
+#array of class labels for the LDA to sort 
+y_pt_eta = np.concatenate((g1_labels, g2_labels))
+#%%
+print(X_pt_eta)
+print(y_pt_eta)
+#%% LDA for data in p_t - eta space
+
+pt_eta_fit = LDA_fit.fit(X_pt_eta, y_pt_eta) #finds best decision boundary based on maximizing inter-class and minimizing intra-class variance
+
 
 
