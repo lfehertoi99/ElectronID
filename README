@@ -1,0 +1,67 @@
+Files output_x.root contain the simulations, just splitted into separate files.
+
+Acronyms:
+-----------
+gsf = Gaussian Sum Filter, a special algorithm used in CMS detector tracking.
+For more information, see: https://arxiv.org/abs/physics/0306087
+
+
+Special values:
+-----------
+-999
+-666
+-10
+...
+
+denote missing values, which you may need to take into account (depends on your algorithms, your plots etc.)
+
+---------------------
+
+1. Variable:
+
+"is_e"
+
+Gives the simulation ground truth, is it an electron or not. Use it as your training target label for supervised training and the ROC performance evaluation. You may also try, if you have time, unsupervised learning such as K-means.
+
+2. Variables:
+
+  'trk_pt',
+  'trk_eta'
+
+Are the reconstructed track (particle candidate) transverse momentum (pt) and pseudorapidity (eta). At this point, you might want to think about re-weighting your training samples in a way that the dependence on pt and eta vanishes. However, this is a somewhat advanced step, and you may skip the re-weighting.
+
+3. These variables below you can use to train your classifier. They are different observables reconstructed in the CMS detector simulation and are reconstructed similarly also for real events.
+
+  'gsf_bdtout1',
+  'eid_rho',
+  'eid_ele_pt',
+  'eid_sc_eta',
+  'eid_shape_full5x5_sigmaIetaIeta',
+  'eid_shape_full5x5_sigmaIphiIphi',
+  'eid_shape_full5x5_circularity',
+  'eid_shape_full5x5_r9',
+  'eid_sc_etaWidth',
+  'eid_sc_phiWidth',
+  'eid_shape_full5x5_HoverE',
+  'eid_trk_nhits',
+  'eid_trk_chi2red',
+  'eid_gsf_chi2red',
+  'eid_brem_frac',
+  'eid_gsf_nhits',
+  'eid_match_SC_EoverP',
+  'eid_match_eclu_EoverP',
+  'eid_match_SC_dEta',
+  'eid_match_SC_dPhi',
+  'eid_match_seed_dEta',
+  'eid_sc_E',
+  'eid_trk_p',
+
+
+4. You can compare your classification results with a reference classifier output which is saved inside the tree, so you can construct a full reference ROC curve with it. By using this variable:
+
+'ele_mva_value'
+
+
+
+You can access all data using python uproot. You may need to filter and preprocess the variables, check their validity for sometimes invalid values (nan, inf) etc. In preprocessing, you should probably also check that the variable "gsf_pt" > 0, otherwise cut the track away (do not consider it at all). If you get problems, start with a very small set of input variables so debugging is more simple.
+
