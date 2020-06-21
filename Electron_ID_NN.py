@@ -121,7 +121,7 @@ for epoch in range(max_epochs):
 #%%
 #get accuracy scores (after training is complete) of 
 print("Accuracy score on training set:", accuracy_score(model.predict(input_data.float()).cpu(), output_data.long().cpu()))
-print("Accuracy score on validation set:", accuracy_score(model.predict(valid_data.float()).cpu(), valid_labels.long().cpu()))
+print("Accuracy score on validation set:", accuracy_score(model.predict(validation_data.float()).cpu(), validation_labels.long().cpu()))
 #%%
 #plot training against no. of epochs
 plt.title("Performance on training and validation data")
