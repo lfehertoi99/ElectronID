@@ -96,14 +96,14 @@ model = Net().cuda()
 loss_fn = torch.nn.CrossEntropyLoss() #output is likelihood, so use CEL
 optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 #%%
-train_loss_data = [] #array in which to store data
-validation_loss_data = []
+train_loss_data = [] #array to store training loss data
+validation_loss_data = [] #array to store validation loss data
 iters_arr = np.arange(0, max_epochs, 1)
 iters = 1
 #%%
 #optimization
 for epoch in range(max_epochs):
-    
+    #TRAINING
     model.train()
     y_pred = model(input_data.float()) #get predicted values
     loss = loss_fn(y_pred, output_data.long()) #calculate loss
@@ -112,15 +112,18 @@ for epoch in range(max_epochs):
     optimizer.zero_grad() #zero gradients
     loss.backward() #backprop
     optimizer.step() #update model parameters
-            
+    
+    #VALIDATION
     model.eval()
     y_pred = model(validation_data.float())
     loss = loss_fn(y_pred, validation_labels.long())
     validation_loss_data.append(loss)
 #%%
+#get accuracy scores (after training is complete) of 
 print("Accuracy score on training set:", accuracy_score(model.predict(input_data.float()).cpu(), output_data.long().cpu()))
 print("Accuracy score on validation set:", accuracy_score(model.predict(valid_data.float()).cpu(), valid_labels.long().cpu()))
 #%%
+#plot training against no. of epochs
 plt.title("Performance on training and validation data")
 plt.plot(iters_arr, train_loss_data, label = "training")
 plt.plot(iters_arr, validation_loss_data, label = "validation")
