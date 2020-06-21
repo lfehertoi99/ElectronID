@@ -51,11 +51,12 @@ D_in, H, D_out = 23, 3, 2 #number of neurons in each layer (1 hidden layer)
 w_1 = torch.randn(D_in, H).cuda()
 w_2 = torch.randn(H, D_out).cuda()
 #%%
-input_data = variables[:5000]
-output_data = labels[:5000]
+batch_size = 5000
+input_data = variables[: batch_size]
+output_data = labels[: batch_size]
 
-validation_data = variables[5000:10000]
-validation_labels = labels[5000:10000]
+validation_data = variables[batch_size : 2* batch_size]
+validation_labels = labels[batch_size : 2* batch_size]
 #%%
 #define Net class
 class Net(torch.nn.Module):
@@ -90,6 +91,7 @@ class Net(torch.nn.Module):
                 ans.append(1)
         return torch.tensor(ans)
 #%%
+#model parameters
 model = Net().cuda()
 loss_fn = torch.nn.CrossEntropyLoss() #output is likelihood, so use CEL
 optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
