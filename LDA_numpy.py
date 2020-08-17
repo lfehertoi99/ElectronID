@@ -4,7 +4,7 @@ Created on Wed Jun 17 01:03:15 2020
 
 @author: kevin
 """
-
+#%%
 import scipy as sp
 import numpy as np
 import pandas as pd
@@ -73,6 +73,7 @@ plt.scatter(setosa_t[:,0],setosa_t[:,1])
 plt.scatter(versicolor_t[:,0], versicolor_t[:,1])
 plt.scatter(virginica_t[:,0], virginica_t[:,1])
 
+plt.show()
 ### yay?
 
 
