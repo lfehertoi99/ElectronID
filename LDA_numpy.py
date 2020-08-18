@@ -9,7 +9,7 @@ import scipy as sp
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+#%%
 ### read data from pandas 
 
 
@@ -25,36 +25,56 @@ versicolor = X[51:100,:]
 virginica = X[101:150,:]
 
 ### finding the mean 
-
-m_s = np.mean(setosa, axis = 0)
-m_vc = np.mean(versicolor, axis = 0)
-m_vg = np.mean(virginica, axis = 0)
-
-m = (m_s + m_vc + m_vg)/3
+class FisherLinearDiscriminant:
+    
+    def __init__(self, n_classes = 2, n_features = 2):
+        self.n_classes = n_classes
+        self.n_features = n_features
+        
+    def get_mean(data):
+        m_s = np.mean(setosa, axis = 0)
+        m_vc = np.mean(versicolor, axis = 0)
+        m_vg = np.mean(virginica, axis = 0)
+        m = (m_s + m_vc + m_vg)/3
+        
+    def scatter_b(data):
+        sb_s = np.dot((m_s - m).T, (m_s - m))
+        sb_vc = np.dot((m_vc - m).T, (m_vc - m))
+        sb_vg = np.dot((m_vg - m).T, (m_vg - m))
+        sb = sb_s + sb_vc + sb_vg
+        
+    def scatter_w(data):
+        cov_s = np.dot((setosa - m_s).T, (setosa - m_s))
+        cov_vc = np.dot((versicolor - m_vc).T, (versicolor - m_vc))
+        cov_vg = np.dot((virginica - m_vg).T, (virginica - m_vg))
+        sw = cov_s + cov_vc + cov_vg
+        
+    def eigenvals(data):
+        eigval, eigvec= np.eigval, eigvec = np.linalg.eig(np.dot(np.linalg.inv(sw),sb))
+        eigpairs = [(np.abs(eigval[i]), eigvec[:,i]) for i in range(len(eigval))]
+        eigpairs = sorted(eigpairs, key = lambda k: k[0], reverse = True)
+        
+    def get_hyperplane(data):
+        wt = np.vstack((eigpairs[0][1], eigpairs[1][1]))
+        w = np.transpose(wt)
+    
+    def predict(data):
+        
+    def plot(data)
 
 ### finding sb
 
-sb_s = np.dot((m_s - m).T, (m_s - m))
-sb_vc = np.dot((m_vc - m).T, (m_vc - m))
-sb_vg = np.dot((m_vg - m).T, (m_vg - m))
-sb = sb_s + sb_vc + sb_vg
+
 
 ### finding sw
 
-cov_s = np.dot((setosa - m_s).T, (setosa - m_s))
-cov_vc = np.dot((versicolor - m_vc).T, (versicolor - m_vc))
-cov_vg = np.dot((virginica - m_vg).T, (virginica - m_vg))
-sw = cov_s + cov_vc + cov_vg
+
 
 ### find eigenvalues
 
-eigval, eigvec= np.eigval, eigvec = np.linalg.eig(np.dot(np.linalg.inv(sw),sb))
 
-eigpairs = [(np.abs(eigval[i]), eigvec[:,i]) for i in range(len(eigval))]
-eigpairs = sorted(eigpairs, key = lambda k: k[0], reverse = True)
 
-wt = np.vstack((eigpairs[0][1], eigpairs[1][1]))
-w = np.transpose(wt)
+
 
 ### transform all
 
