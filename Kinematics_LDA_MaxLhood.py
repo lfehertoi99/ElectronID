@@ -138,6 +138,8 @@ class ParticleNaiveBayes:
 classifier = ParticleNaiveBayes()
 classifier.get_params(train)
 probabilities, classes = classifier.predict(test)
+accuracy = 1 - np.sum([(classes - test[:, 4])**2]) / len(test) #fraction of correctly classified points in test set
+print(accuracy)
 #%%
 fig, ax = plt.subplots(figsize = (12, 8))
 
