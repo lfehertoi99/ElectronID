@@ -16,13 +16,16 @@ import matplotlib.pyplot as plt
 ### read data from pandas 
 names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'Class']
 df = pd.read_csv("iris.csv", names = names)
-df.head()
 #%%
-#PREPROCESSING STEP    
-def get_classes(self, df, kw):
-    class_labels = [x for x in np.unique(df[kw])]
-    class_data = [np.array(df[df[kw] == x])[:, :-1] for x in class_labels]
-    return class_labels, class_data
+bitmask = np.random.rand(len(df)) < 0.8
+train = df[bitmask]
+test = df[~bitmask]
+#%%
+class_labels = [x for x in np.unique(df["Class"])]
+d = []
+for x in class_labels:
+    d += [np.array(df[df["Class"] == x])[:, :-1]]
+d = np.array(d)
 #%%
 class FisherLinearDiscriminant:
     
@@ -33,12 +36,14 @@ class FisherLinearDiscriminant:
         self.g_params = g_params #LIST OF GAUSSIAN MEAN AND STD FOR EACH CLASS POST-PROJECTION
 
     def get_mean(self, class_data): #class data should be array dim (n_samples x n_features x n_classes)
-        means = np.mean(x, axis = 1)
+        means = np.mean(class_data, axis = 1)
         mu = np.mean(means, axis = 0)
         return means, mu
         
     def scatter_b(self, means, mu): #scatter taken with entire dataset
-        class_b = np.array([np.dot(np.array([x - mu]).T, np.array([x - mu])) for x in means])
+        for x in means:
+            x.reshape(-1, 1)
+        class_b = [np.dot((x - mu).T, (x - mu)) for x in means]
         return class_b, np.sum(class_b, axis = 0)
 
     def scatter_w(self, class_data, means): #scatter taken only within one class
@@ -54,35 +59,30 @@ class FisherLinearDiscriminant:
         self.params = w
         
     def set_g_params(self, d):
-        g_params = []
-        keys = [0, 1, 2]
-        for x in keys:
-            proj = np.dot(lda.params, np.array(d[x]).T)
-            g_params += [(np.mean(proj), np.cov(proj.astype(float)))]
+        g_params = dict()
+        for x in range(self.n_classes):
+            proj = np.dot(np.array(d[x]), lda.params.T)
+            mean, cov = np.mean(proj, axis = 0), np.cov(proj.astype(float), rowvar = False)
+            g_params[x] = {"mean": mean, "cov": cov}
         self.g_params = g_params
         
     def predict(self, X):
-        g = lambda x, y: norm(x, y)
+        g = lambda x, y: multivariate_normal(x, y) #x and y are vectors!!
         transform = np.dot(X, self.params.T)
         g_vals = np.zeros((len(transform), self.n_classes))
         for x in range(self.n_classes):
-            j, k = self.g_params[x]
-            g_vals[:, x] = g(j, k).pdf(transform)[:, 0]   
+                j, k = self.g_params[x]["mean"], self.g_params[x]["cov"]
+                g_vals[:, x] = g(j, k).pdf(transform)  
         return np.argmax(g_vals, axis = 1)
 #%%
-lda = FisherLinearDiscriminant(2) #create model
-l, d = lda.get_classes(df, "Class") #get data and labels
+lda = FisherLinearDiscriminant(2, 3) #create model
 m, mu = lda.get_mean(d)  #get within-class means and overall mean (vectors of shape 4x1)
 sb_c, sb, sw_c, sw = *lda.scatter_b(m, mu), *lda.scatter_w(d, m) #get class-wise and total between and within scatter
 lda.set_eigvecs(sb, sw) #set model parameters (projection directions)   
 lda.set_g_params(d)
 #%%
-class_data = np.array([[[1, 2, 3], [1, 2, 3]], [[5, 6, 7], [5, 6, 7]]])
-means = np.mean(class_data, axis = 1)
-mu = np.mean(means, axis = 0)
-print(np.dot((means - mu).T, (means - mu)))
-
-    
+lda.predict(np.array(test)[:, :-1])
+#%%    
 
 
 
