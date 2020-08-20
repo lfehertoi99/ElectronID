@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 names = ['sepal-length', 'sepal-width', 'petal-length', 'petal-width', 'Class']
 df = pd.read_csv("iris.csv", names = names)
 #%%
-bitmask = np.random.rand(len(df)) < 0.8
+bitmask = np.random.rand(len(df)) < 0.9
 train = df[bitmask]
 test = df[~bitmask]
 #%%
@@ -80,7 +80,6 @@ m, mu = lda.get_mean(d)  #get within-class means and overall mean (vectors of sh
 sb_c, sb, sw_c, sw = *lda.scatter_b(m, mu), *lda.scatter_w(d, m) #get class-wise and total between and within scatter
 lda.set_eigvecs(sb, sw) #set model parameters (projection directions)   
 lda.set_g_params(d)
-#%%
 lda.predict(np.array(test)[:, :-1])
 #%%    
 
