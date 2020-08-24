@@ -13,12 +13,13 @@ import torch
 import torch.nn.functional as F
 from sklearn import datasets
 from sklearn.metrics import accuracy_score
+from imblearn.over_sampling import SMOTE
 #%%
 torch.cuda.device(0)
 #%%
 #Reading ROOT files
 #open directory
-file = uproot.open(r"C:\Users\lilif\OneDrive\Documents\Physics\Computing\output_1.root")
+file = uproot.open(r"output_1.root")
 file.keys()
 #get tree
 tree = file["ntuplizer"]
@@ -36,12 +37,21 @@ all_vars = branch.pandas.df(["gsf_bdtout1", "eid_rho", "eid_ele_pt", "eid_sc_eta
 all_vars = all_vars.replace([np.inf, -np.inf, -10, -666, -999], np.nan)
 all_vars = all_vars.dropna()
 #%%
-all_vars_arr = np.array(all_vars)[:, :-1].reshape(-1, 23)
-ground_truth_arr = np.array(all_vars)[:, -1].astype(int) #convert boolean values to 0 and 1 for class labels (electron, not electron)
+select = np.random.rand(len(all_vars)) < 0.02
+all_vars = all_vars[select]
 #%%
-#put data into torch tensors to pass into NN
-variables = torch.from_numpy(all_vars_arr.astype(float)).cuda()
-labels = torch.from_numpy(ground_truth_arr.astype(float)).cuda()
+all_vars_arr = np.array(all_vars).reshape(-1, 24)
+all_X, all_y = all_vars_arr[:, :-1], all_vars_arr[:, -1].astype(int)
+#%%
+sm = SMOTE()
+X_res, y_res = sm.fit_resample(all_X, all_y)
+#%%
+bitmask = np.random.rand(len(X_res)) < 0.8
+train_d, train_l = X_res[bitmask], y_res[bitmask]
+test_d, test_l = X_res[~bitmask], y_res[~bitmask]
+#%%
+train_d, train_l = torch.from_numpy(train_d.astype(float)).cuda(), torch.from_numpy(train_l.astype(float)).cuda()
+test_d, test_l = torch.from_numpy(test_d.astype(float)).cuda(), torch.from_numpy(test_l.astype(float)).cuda()
 #%%
 max_epochs = 500 #max iterations for backprop
 learning_rate = 0.01 #learning rate
@@ -51,13 +61,6 @@ D_in, H, D_out = 23, 3, 2 #number of neurons in each layer (1 hidden layer)
 w_1 = torch.randn(D_in, H).cuda()
 w_2 = torch.randn(H, D_out).cuda()
 #%%
-batch_size = 5000
-input_data = variables[: batch_size]
-output_data = labels[: batch_size]
-
-validation_data = variables[batch_size : 2* batch_size]
-validation_labels = labels[batch_size : 2* batch_size]
-#%%
 #define Net class
 class Net(torch.nn.Module):
     def __init__(self):
@@ -65,7 +68,6 @@ class Net(torch.nn.Module):
         #Our network consists of 3 layers. 1 input, 1 hidden and 1 output layer
         #This applies Linear transformation to input data. 
         self.fc1 = torch.nn.Linear(D_in, H)
-        
         #This applies linear transformation to produce output data
         self.fc2 = torch.nn.Linear(H, D_out)
         
@@ -105,8 +107,8 @@ iters = 1
 for epoch in range(max_epochs):
     #TRAINING
     model.train()
-    y_pred = model(input_data.float()) #get predicted values
-    loss = loss_fn(y_pred, output_data.long()) #calculate loss
+    y_pred = model(train_d.float()) #get predicted values
+    loss = loss_fn(y_pred, train_l.long()) #calculate loss
     train_loss_data.append(loss) #store loss
     
     optimizer.zero_grad() #zero gradients
@@ -115,13 +117,13 @@ for epoch in range(max_epochs):
     
     #VALIDATION
     model.eval()
-    y_pred = model(validation_data.float())
-    loss = loss_fn(y_pred, validation_labels.long())
+    y_pred = model(test_d.float())
+    loss = loss_fn(y_pred, test_l.long())
     validation_loss_data.append(loss)
 #%%
 #get accuracy scores (after training is complete) of 
-print("Accuracy score on training set:", accuracy_score(model.predict(input_data.float()).cpu(), output_data.long().cpu()))
-print("Accuracy score on validation set:", accuracy_score(model.predict(validation_data.float()).cpu(), validation_labels.long().cpu()))
+print("Accuracy score on training set:", accuracy_score(model.predict(train_d.float()).cpu(), train_l.long().cpu()))
+print("Accuracy score on validation set:", accuracy_score(model.predict(test_d.float()).cpu(), test_l.long().cpu()))
 #%%
 #plot training against no. of epochs
 plt.title("Performance on training and validation data")
